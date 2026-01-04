@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulateur Bac Général</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--card);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 100px;
+        }
+
+        h1 { text-align: center; color: var(--primary); margin: 0; }
+        
+        /* Selecteur de Session */
+        .session-selector {
+            text-align: center;
+            margin: 20px 0 30px 0;
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #bfdbfe;
+        }
+        .session-selector label {
+            font-weight: bold;
+            color: var(--primary);
+            margin-right: 10px;
+        }
+        .session-selector select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--primary);
+            font-size: 1rem;
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 8px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mode-switch {
+            display: flex;
+            background: #e2e8f0;
+            border-radius: 20px;
+            padding: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            user-select: none;
+        }
+        .mode-option {
+            padding: 5px 12px;
+            border-radius: 16px;
+            transition: all 0.3s;
+        }
+        .mode-option.active {
+            background: white;
+            color: var(--primary);
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 70px 2fr;
+            gap: 15px;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .row-option {
+            background-color: #fffbeb;
+            padding-left: 10px;
+            padding-right: 10px;
+            border-radius: 6px;
+            margin: 5px 0;
+            border: 1px solid #fef3c7;
+        }
+
+        /* Ligne spéciale pour la spé abandonnée (Mode Terminale) */
+        .row-abandon-fixe {
+            background-color: #fef2f2;
+            border-bottom: 1px solid #fee2e2;
+            padding-left: 10px;
+            padding-right: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            width: 100%;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input[type="number"]:focus { border-color: var(--primary); outline: none; }
+
+        .coeff-box {
+            background-color: #f1f5f9;
+            color: #64748b;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 6px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .double-input {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+        .double-input input { font-size: 0.9rem; }
+        
+        .hidden { display: none !important; }
+
+        .option-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #d97706;
+        }
+
+        /* Blocs de simulation Spécialités (Mode 1ère) */
+        .spe-box {
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #fff;
+            transition: all 0.3s;
+        }
+        .spe-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .radio-abandon {
+            cursor: pointer;
+            color: #ef4444;
+            font-weight: normal;
+            font-size: 0.9rem;
+        }
+
+        /* Footer */
+        .footer-res {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 800px;
+            background: var(--primary);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+            z-index: 100;
+            box-sizing: border-box;
+        }
+        .grade-display { font-size: 2rem; font-weight: 800; }
+        .mention-display { font-weight: 600; color: #fbbf24; text-align: right; }
+        
+        @media (max-width: 600px) {
+            .footer-res {
+                flex-direction: column;
+                gap: 5px;
+                padding: 10px 20px;
+                border-radius: 20px;
+            }
+            .grade-display { font-size: 1.5rem; }
+            .row { grid-template-columns: 1.5fr 50px 2fr; gap: 8px; font-size: 0.9rem; }
+            .mode-switch { font-size: 0.7rem; }
+            .radio-abandon { white-space: normal; text-align: right; font-size: 0.8rem; }
+            .session-selector { font-size: 0.9rem; padding: 10px; }
+            .session-selector select { width: 100%; margin-top: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Simulateur Bac Général</h1>
+    
+    <div class="session-selector">
+        <label for="session_select">Je suis actuellement en :</label>
+        <select id="session_select" onchange="changeSession()">
+            <option value="2027">1ère (Bac 2027)</option>
+            <option value="2026">Terminale (Bac 2026)</option>
+        </select>
+    </div>
+
+    <h2>1. Épreuves anticipées</h2>
+    <div class="row">
+        <label>Français (Écrit + Oral)</label>
+        <div class="coeff-box">Coeff 10</div>
+        <input type="number" id="fr" placeholder="/20" oninput="calc()">
+    </div>
+    
+    <div class="row" id="row_maths_anticipe">
+        <label>Mathématiques (Nouv. Épreuve)</label>
+        <div class="coeff-box">Coeff 2</div>
+        <input type="number" id="maths_anticipe" placeholder="/20" oninput="calc()">
+    </div>
+
+    <h2>
+        <span>2. Contrôle continu</span>
+        <div class="mode-switch" id="mode_switch_container" onclick="toggleMode()">
+            <div class="mode-option active" id="btn-global">Moyenne Globale</div>
+            <div class="mode-option" id="btn-detail">Détail 1ère/Term</div>
+        </div>
+    </h2>
+    <p style="font-size: 0.85rem; color: #666; margin-top:-10px; margin-bottom: 20px; text-align: center;">
+        <span id="info-global">Saisissez une moyenne estimée sur les 2 ans.</span>
+        <span id="info-detail" class="hidden">Saisissez séparément vos moyennes de 1ère et de Terminale.</span>
+    </p>
+
+    <div id="tc-container">
+        
+        <div class="row">
+            <label>LVA</label>
+            <div class="coeff-box">Coeff 6</div>
+            <input type="number" id="lva_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+            <div class="double-input inp-detail hidden">
+                <input type="number" id="lva_1" placeholder="1ère" oninput="calc()">
+                <input type="number" id="lva_t" placeholder="Term" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="row">
+            <label>LVB</label>
+            <div class="coeff-box">Coeff 6</div>
+            <input type="number" id="lvb_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+            <div class="double-input inp-detail hidden">
+                <input type="number" id="lvb_1" placeholder="1ère" oninput="calc()">
+                <input type="number" id="lvb_t" placeholder="Term" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="row row-option">
+            <label class="option-check">
+                <input type="checkbox" id="check_lvc" onchange="toggleLVC()">
+                Option LVC
+            </label>
+            <div id="lvc_coeff" class="coeff-box hidden">Coeff 4</div>
+            <div id="lvc_inputs" class="hidden" style="width:100%">
+                <input type="number" id="lvc_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+                <div class="double-input inp-detail hidden">
+                    <input type="number" id="lvc_1" placeholder="1ère" oninput="calc()">
+                    <input type="number" id="lvc_t" placeholder="Term" oninput="calc()">
+                </div>
+            </div>
+            <div id="lvc_placeholder" style="color:#aaa; font-style:italic; font-size:0.9rem; grid-column: 2 /span 2;">
+                (Cochez pour activer)
+            </div>
+        </div>
+
+        <div class="row">
+            <label>Ens. Scientifique</label>
+            <div class="coeff-box">Coeff 6</div>
+            <input type="number" id="es_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+            <div class="double-input inp-detail hidden">
+                <input type="number" id="es_1" placeholder="1ère" oninput="calc()">
+                <input type="number" id="es_t" placeholder="Term" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="row">
+            <label>EPS</label>
+            <div class="coeff-box">Coeff 6</div>
+            <input type="number" id="eps_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+            <div class="double-input inp-detail hidden">
+                <input type="number" id="eps_1" placeholder="1ère" oninput="calc()">
+                <input type="number" id="eps_t" placeholder="Term" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="row">
+            <label>Histoire-Géo</label>
+            <div class="coeff-box">Coeff 6</div>
+            <input type="number" id="hg_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+            <div class="double-input inp-detail hidden">
+                <input type="number" id="hg_1" placeholder="1ère" oninput="calc()">
+                <input type="number" id="hg_t" placeholder="Term" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="row">
+            <label>EMC</label>
+            <div class="coeff-box">Coeff 2</div>
+            <input type="number" id="emc_global" class="inp-global" placeholder="Moy. 2 ans" oninput="calc()">
+            <div class="double-input inp-detail hidden">
+                <input type="number" id="emc_1" placeholder="1ère" oninput="calc()">
+                <input type="number" id="emc_t" placeholder="Term" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="row row-abandon-fixe hidden" id="row_spe_abandon_fixe">
+            <label style="color:#b91c1c;">Spécialité abandonnée (en 1ère)</label>
+            <div class="coeff-box" style="background:#fee2e2; color:#b91c1c;">Coeff 8</div>
+            <input type="number" id="spe_abandon_fixe_val" placeholder="Moyenne 1ère" oninput="calc()">
+        </div>
+
+    </div>
+
+    <div id="block_spe_simulation">
+        <h2>3. Choix des Spécialités</h2>
+        <div class="spe-box" id="box_sim_spe1">
+            <div class="spe-header">
+                <span>Spécialité A</span>
+                <label class="radio-abandon"><input type="radio" name="abandon_sim" value="spe1" onchange="calc()"> J'abandonne celle-ci</label>
+            </div>
+            <div class="row" style="border:none; padding:0;">
+                <div class="coeff-box" id="lbl_sim_spe1">Coeff 16</div>
+                <input type="number" id="note_sim_spe1" placeholder="Moyenne" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="spe-box" id="box_sim_spe2">
+            <div class="spe-header">
+                <span>Spécialité B</span>
+                <label class="radio-abandon"><input type="radio" name="abandon_sim" value="spe2" onchange="calc()"> J'abandonne celle-ci</label>
+            </div>
+            <div class="row" style="border:none; padding:0;">
+                <div class="coeff-box" id="lbl_sim_spe2">Coeff 16</div>
+                <input type="number" id="note_sim_spe2" placeholder="Moyenne" oninput="calc()">
+            </div>
+        </div>
+
+        <div class="spe-box" id="box_sim_spe3">
+            <div class="spe-header">
+                <span>Spécialité C</span>
+                <label class="radio-abandon"><input type="radio" name="abandon_sim" value="spe3" checked onchange="calc()"> J'abandonne celle-ci</label>
+            </div>
+            <div class="row" style="border:none; padding:0;">
+                <div class="coeff-box" id="lbl_sim_spe3">Coeff 8</div>
+                <input type="number" id="note_sim_spe3" placeholder="Moyenne" oninput="calc()">
+            </div>
+        </div>
+    </div>
+
+    <div id="block_spe_terminale" class="hidden">
+        <h2>3. Épreuves Terminales</h2>
+        
+        <div class="row">
+            <label>Spécialité 1 (Épreuve)</label>
+            <div class="coeff-box">Coeff 16</div>
+            <input type="number" id="term_spe1" placeholder="/20" oninput="calc()">
+        </div>
+
+        <div class="row">
+            <label>Spécialité 2 (Épreuve)</label>
+            <div class="coeff-box">Coeff 16</div>
+            <input type="number" id="term_spe2" placeholder="/20" oninput="calc()">
+        </div>
+    </div>
+
+    <h2 id="h2_philo_go">4. Autres épreuves finales</h2>
+    
+    <div class="row">
+        <label>Philosophie</label>
+        <div class="coeff-box">Coeff 8</div>
+        <input type="number" id="philo" placeholder="/20" oninput="calc()">
+    </div>
+    
+    <div class="row">
+        <label>Grand Oral</label>
+        <div class="coeff-box" id="lbl_go_coeff">Coeff 10</div>
+        <input type="number" id="go" placeholder="/20" oninput="calc()">
+    </div>
+</div>
+
+<div class="footer-res">
+    <div style="font-size:0.9rem;">Points : <span id="pts">0</span> / <span id="bareme">100</span></div>
+    <div class="grade-display" id="moyenne">0.00/20</div>
+    <div class="mention-display" id="mention">Saisissez vos notes</div>
+</div>
+
+<script>
+    let modeDetail = false;
+
+    function changeSession() {
+        const session = document.getElementById('session_select').value;
+        const rowMaths = document.getElementById('row_maths_anticipe');
+        const switchContainer = document.getElementById('mode_switch_container');
+        
+        // Elements spécifiques Terminale
+        const rowAbandonFixe = document.getElementById('row_spe_abandon_fixe');
+        const blockSpeTerm = document.getElementById('block_spe_terminale');
+        
+        // Elements spécifiques 1ère
+        const blockSpeSim = document.getElementById('block_spe_simulation');
+        const h2Philo = document.getElementById('h2_philo_go');
+
+        // Coefficient Grand Oral
+        const lblGO = document.getElementById('lbl_go_coeff');
+
+        if (session === '2026') {
+            // --- MODE TERMINALE ---
+            // 1. Masquer Maths anticipées
+            rowMaths.classList.add('hidden');
+            
+            // 2. Forcer le mode Détail
+            modeDetail = true;
+            switchContainer.classList.add('hidden');
+            document.getElementById('info-global').classList.add('hidden');
+            document.getElementById('info-detail').classList.remove('hidden');
+
+            // 3. Afficher la Spé Abandonnée dans le Controle Continu
+            rowAbandonFixe.classList.remove('hidden');
+
+            // 4. Afficher le bloc d'épreuves terminales (Spé 1 & 2)
+            blockSpeTerm.classList.remove('hidden');
+
+            // 5. Masquer le bloc de simulation
+            blockSpeSim.classList.add('hidden');
+            
+            // 6. Masquer titre intermédiaire
+            h2Philo.style.display = 'none';
+
+            // 7. MAJ Coefficient GO (10)
+            lblGO.innerText = "Coeff 10";
+
+        } else {
+            // --- MODE 1ÈRE ---
+            // 1. Afficher Maths
+            rowMaths.classList.remove('hidden');
+            
+            // 2. Mode standard
+            modeDetail = false;
+            switchContainer.classList.remove('hidden');
+            document.getElementById('btn-global').classList.add('active');
+            document.getElementById('btn-detail').classList.remove('active');
+            document.getElementById('info-global').classList.remove('hidden');
+            document.getElementById('info-detail').classList.add('hidden');
+
+            // 3. Masquer la Spé Abandonnée fixe
+            rowAbandonFixe.classList.add('hidden');
+
+            // 4. Masquer le bloc d'épreuves terminales fixes
+            blockSpeTerm.classList.add('hidden');
+
+            // 5. Afficher le bloc de simulation
+            blockSpeSim.classList.remove('hidden');
+
+            // 6. Afficher titre intermédiaire
+            h2Philo.style.display = 'flex';
+            h2Philo.innerText = "4. Épreuves Terminales";
+
+            // 7. MAJ Coefficient GO (8 pour les 1ères)
+            lblGO.innerText = "Coeff 8";
+        }
+
+        refreshVisibility();
+        calc();
+    }
+
+    function toggleMode() {
+        const session = document.getElementById('session_select').value;
+        if (session === '2026') return; 
+
+        modeDetail = !modeDetail;
+        
+        const btnGlobal = document.getElementById('btn-global');
+        const btnDetail = document.getElementById('btn-detail');
+
+        if (modeDetail) {
+            btnGlobal.classList.remove('active');
+            btnDetail.classList.add('active');
+            document.getElementById('info-global').classList.add('hidden');
+            document.getElementById('info-detail').classList.remove('hidden');
+        } else {
+            btnGlobal.classList.add('active');
+            btnDetail.classList.remove('active');
+            document.getElementById('info-global').classList.remove('hidden');
+            document.getElementById('info-detail').classList.add('hidden');
+        }
+
+        refreshVisibility();
+        calc();
+    }
+
+    function toggleLVC() {
+        refreshVisibility();
+        calc();
+    }
+
+    function refreshVisibility() {
+        const globals = document.querySelectorAll('.inp-global');
+        const details = document.querySelectorAll('.inp-detail');
+
+        if(modeDetail) {
+            globals.forEach(el => el.classList.add('hidden'));
+            details.forEach(el => el.classList.remove('hidden'));
+        } else {
+            globals.forEach(el => el.classList.remove('hidden'));
+            details.forEach(el => el.classList.add('hidden'));
+        }
+
+        const hasLVC = document.getElementById('check_lvc').checked;
+        const lvcInputs = document.getElementById('lvc_inputs');
+        const lvcCoeff = document.getElementById('lvc_coeff');
+        const lvcPlaceholder = document.getElementById('lvc_placeholder');
+
+        if(hasLVC) {
+            lvcInputs.classList.remove('hidden');
+            lvcCoeff.classList.remove('hidden');
+            lvcPlaceholder.classList.add('hidden');
+            if(modeDetail) {
+                 lvcInputs.querySelector('.inp-global').classList.add('hidden');
+                 lvcInputs.querySelector('.inp-detail').classList.remove('hidden');
+            } else {
+                 lvcInputs.querySelector('.inp-global').classList.remove('hidden');
+                 lvcInputs.querySelector('.inp-detail').classList.add('hidden');
+            }
+        } else {
+            lvcInputs.classList.add('hidden');
+            lvcCoeff.classList.add('hidden');
+            lvcPlaceholder.classList.remove('hidden');
+        }
+    }
+
+    function val(id) {
+        const el = document.getElementById(id);
+        if(!el) return 0;
+        const v = el.value;
+        return v === "" ? 0 : parseFloat(v);
+    }
+
+    function calc() {
+        let totalPts = 0;
+        let totalCoef = 0;
+
+        const add = (pts, coef) => {
+            totalPts += pts;
+            totalCoef += coef;
+        };
+
+        const session = document.getElementById('session_select').value;
+
+        // --- 1. Anticipées ---
+        add(val('fr') * 10, 10);
+        if (session === '2027') {
+            add(val('maths_anticipe') * 2, 2);
+        }
+
+        // --- 2. Tronc Commun / CC ---
+        const matieres = [
+            { id: 'lva', coef: 6 },
+            { id: 'lvb', coef: 6 },
+            { id: 'es', coef: 6 },
+            { id: 'eps', coef: 6 },
+            { id: 'hg', coef: 6 },
+            { id: 'emc', coef: 2 }
+        ];
+
+        matieres.forEach(m => {
+            let noteFinale = 0;
+            if (modeDetail) {
+                const n1 = val(m.id + '_1');
+                const nt = val(m.id + '_t');
+                noteFinale = (n1 + nt) / 2;
+            } else {
+                noteFinale = val(m.id + '_global');
+            }
+            add(noteFinale * m.coef, m.coef);
+        });
+
+        if(document.getElementById('check_lvc').checked) {
+            const coefLVC = 4;
+            let noteLVC = 0;
+            if(modeDetail) {
+                noteLVC = (val('lvc_1') + val('lvc_t')) / 2;
+            } else {
+                noteLVC = val('lvc_global');
+            }
+            add(noteLVC * coefLVC, coefLVC);
+        }
+
+        // --- SPÉCIALITÉS ---
+        if (session === '2026') {
+            // MODE TERMINALE
+            add(val('spe_abandon_fixe_val') * 8, 8); // CC
+            add(val('term_spe1') * 16, 16); // Epreuve
+            add(val('term_spe2') * 16, 16); // Epreuve
+        } else {
+            // MODE 1ÈRE
+            const abandon = document.querySelector('input[name="abandon_sim"]:checked').value;
+            ['spe1', 'spe2', 'spe3'].forEach(spe => {
+                const isAb = (spe === abandon);
+                const box = document.getElementById('box_sim_' + spe);
+                const lbl = document.getElementById('lbl_sim_' + spe);
+                const note = val('note_sim_' + spe);
+
+                if (isAb) {
+                    box.style.backgroundColor = '#fef2f2';
+                    box.style.borderColor = '#fca5a5';
+                    lbl.innerText = 'Coeff 8';
+                    lbl.style.color = '#b91c1c';
+                    add(note * 8, 8);
+                } else {
+                    box.style.backgroundColor = '#fff';
+                    box.style.borderColor = '#e2e8f0';
+                    lbl.innerText = 'Coeff 16';
+                    lbl.style.color = '#64748b';
+                    add(note * 16, 16);
+                }
+            });
+        }
+
+        // --- 4. Autres Finales ---
+        add(val('philo') * 8, 8);
+        
+        // Coeff Grand Oral variable
+        let coeffGO = 10;
+        if (session === '2027') coeffGO = 8;
+        add(val('go') * coeffGO, coeffGO);
+
+        // --- Résultats ---
+        const result = totalCoef > 0 ? (totalPts / totalCoef) : 0;
+        
+        document.getElementById('pts').innerText = totalPts.toFixed(1);
+        document.getElementById('bareme').innerText = totalCoef * 20; 
+        document.getElementById('moyenne').innerText = result.toFixed(2) + "/20";
+
+        const ment = document.getElementById('mention');
+        
+        if (result === 0) {
+             ment.innerText = "Saisissez vos notes";
+        } else if(result < 8) {
+            ment.innerText = "Recalé";
+        } else if(result < 10) {
+            ment.innerText = "Rattrapage";
+        } else if(result < 12) {
+            ment.innerText = "Admis";
+        } else if(result < 14) {
+            ment.innerText = "Mention Assez Bien";
+        } else if(result < 16) {
+            ment.innerText = "Mention Bien";
+        } else {
+            ment.innerText = "Mention Très Bien 👏";
+        }
+    }
+
+    // Init
+    changeSession();
+</script>
+
+</body>
+</html>
